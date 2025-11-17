@@ -1,0 +1,36 @@
+# Generated blocklist files (numbered)
+blocklist_*.txt
+
+# Environment variables
+.env
+
+# Generated domain list CSV files
+lists/
+adguard_domains_*.csv
+adguard_ips_*.csv
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Downloaded filter
+filter.txt
