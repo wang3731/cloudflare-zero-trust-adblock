@@ -84,14 +84,14 @@ def delete_existing_adguard_policy():
     for rule in rules:
         if rule["name"] == "Block AdGuard DNS Filter":
             rule_id = rule["id"]
-            del_response = requests.delete(url, headers=HEADERS)
+            del_response = requests.delete(f"{url}/{rule_id}", headers=HEADERS)
             if del_response.status_code == 200:
-                print(f"  ✅ Deleted: {name}")
+                print(f"  ✅ Deleted policy: {rule['name']}")
             else:
-                print(f"  ❌ Failed to delete: {name}")
+                print(f"  ❌ Failed to delete policy: {rule['name']}")
                 print(f"     Status: {del_response.status_code}")
                 print(f"     Body:   {del_response.text}")
-                sys.exit(1)  # ← 加這行，不要繼續建立
+                sys.exit(1)
 
 def delete_existing_adguard_lists(auto_approve=False):
     """Delete any existing AdGuard lists to allow fresh upload."""
