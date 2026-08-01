@@ -25,22 +25,32 @@ EXCLUSION_SOURCES = [
 ]
 
 def fetch_domains():
-    domains = set()
+    domains_domain = set()
+    domains_ip = set()
     for url in EXCLUSION_SOURCES:
         print(f"下載 {url.split('/')[-1]}...")
-        r = requests.get(url)
+        try:
+            r = requests.get(url, timeout=15)
+            r.raise_for_status()
+        except Exception as e:
+            print(f"  ⚠️ 下載失敗，略過: {e}")
+            continue
         for line in r.text.splitlines():
-            line = line.strip()
-            # 跳過空行、註解、app 限定規則
+            line = line.strip().strip('"')
             if not line or line.startswith('//') or line.startswith('#'):
                 continue
             if '$app=' in line:
                 continue
-            # 去掉引號（exact match 語法）
-            line = line.strip('"')
-            domains.add(line)
-    print(f"共 {len(domains)} 個 domain")
-    return sorted(domains)
+            # 區分 IP 和 domain
+            try:
+                import ipaddress
+                ipaddress.ip_address(line)
+                domains_ip.add(line)
+            except ValueError:
+                domains_domain.add(line)
+
+    print(f"共 {len(domains_domain)} 個 domain，{len(domains_ip)} 個 IP")
+    return sorted(domains_domain), sorted(domains_ip)
 
 def delete_existing_policy(name):
     r = requests.get(f"{BASE_URL}/rules", headers=HEADERS)
@@ -57,34 +67,27 @@ def delete_existing_list(name):
             requests.delete(f"{BASE_URL}/lists/{lst['id']}", headers=HEADERS)
             print(f"刪除舊 list: {name}")
 
-def upload_list(domains):
-    LIST_NAME = "AdGuard HTTPS Exclusions"
-    delete_existing_list(LIST_NAME)
-
-    # Cloudflare 每個 list 最多 1000 筆，切分上傳
+def upload_list(domains, list_type, base_name):
+    """通用上傳函數，domain/IP 分開呼叫"""
     list_ids = []
     chunks = [domains[i:i+1000] for i in range(0, len(domains), 1000)]
 
     for i, chunk in enumerate(chunks, 1):
-        name = f"{LIST_NAME} {i}"
+        name = f"{base_name} {i}"
         delete_existing_list(name)
         print(f"上傳 {name} ({len(chunk)} 筆)...")
         r = requests.post(
             f"{BASE_URL}/lists",
             headers=HEADERS,
-            json={
-                "name": name,
-                "type": "DOMAIN",
-                "items": [{"value": d} for d in chunk]
-            }
+            json={"name": name, "type": list_type,
+                  "items": [{"value": d} for d in chunk]}
         )
         data = r.json()
         if data.get("success"):
             list_ids.append(data["result"]["id"])
-            print(f"  ✅ 成功")
+            print("  ✅ 成功")
         else:
             print(f"  ❌ 失敗: {data['errors']}")
-
     return list_ids
 
 def create_noinspect_policy(list_ids):
@@ -116,7 +119,11 @@ def create_noinspect_policy(list_ids):
         print(f"❌ 失敗: {data['errors']}")
 
 if __name__ == "__main__":
-    domains = fetch_domains()
-    list_ids = upload_list(domains)
+    domains, ips = fetch_domains()
+    list_ids = []
+    if domains:
+        list_ids += upload_list(domains, "DOMAIN", "AdGuard HTTPS Exclusions")
+    if ips:
+        list_ids += upload_list(ips, "IP", "AdGuard HTTPS Exclusions IP")
     if list_ids:
         create_noinspect_policy(list_ids)
