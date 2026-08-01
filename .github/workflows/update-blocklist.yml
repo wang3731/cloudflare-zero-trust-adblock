@@ -2,8 +2,8 @@ name: Update AdGuard Blocklist
 
 on:
   schedule:
-    - cron: '0 18 * * 0'  # 台灣時間每週一凌晨 2 點
-  workflow_dispatch:        # 允許手動觸發
+    - cron: '0 22 * * 0'
+  workflow_dispatch:
 
 jobs:
   update:
@@ -21,11 +21,17 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Generate lists
+      - name: Generate DNS lists
         run: python3 generate-lists.py
 
-      - name: Upload to Cloudflare
+      - name: Upload DNS to Cloudflare
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: python3 upload_to_cloudflare.py --auto-approve
+
+      - name: Upload No Inspect policy
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: python3 upload-noinspect.py
