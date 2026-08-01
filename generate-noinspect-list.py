@@ -24,22 +24,23 @@ EXCLUSION_SOURCES = [
     "https://raw.githubusercontent.com/AdguardTeam/HttpsExclusions/master/exclusions/firefox.txt",
 ]
 
+def is_ip(value):
+    try:
+        ipaddress.ip_address(value)
+        return True
+    except ValueError:
+        return False
+
 def fetch_domains():
     domains = set()
+    skipped_ips = 0
     for url in EXCLUSION_SOURCES:
-        print(f"下載 {url.split('/')[-1]}...")
-        r = requests.get(url)
-        for line in r.text.splitlines():
-            line = line.strip()
-            # 跳過空行、註解、app 限定規則
-            if not line or line.startswith('//') or line.startswith('#'):
-                continue
-            if '$app=' in line:
-                continue
-            # 去掉引號（exact match 語法）
-            line = line.strip('"')
-            domains.add(line)
-    print(f"共 {len(domains)} 個 domain")
+        ...
+        if is_ip(line):
+            skipped_ips += 1
+            continue           # ← IP 直接濾掉,不進 domain set
+        domains.add(line)
+    print(f"共 {len(domains)} 個 domain（略過 {skipped_ips} 個 IP...")
     return sorted(domains)
 
 def delete_existing_policy(name):
@@ -65,7 +66,7 @@ def delete_existing_list(name):
 
 def upload_list(domains):
     LIST_NAME = "AdGuard HTTPS Exclusions"
-    delete_existing_list(LIST_NAME)
+    # delete_existing_list(LIST_NAME)
 
     # Cloudflare 每個 list 最多 1000 筆，切分上傳
     list_ids = []
@@ -95,7 +96,7 @@ def upload_list(domains):
 
 def create_noinspect_policy(list_ids):
     POLICY_NAME = "AdGuard HTTPS No Inspect"
-    delete_existing_policy(POLICY_NAME)
+    # delete_existing_policy(POLICY_NAME)
 
     traffic = " or ".join(
         [f"any(http.request.domains[*] in ${lid})" for lid in list_ids]
