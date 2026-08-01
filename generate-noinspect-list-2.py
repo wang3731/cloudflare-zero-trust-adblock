@@ -17,6 +17,8 @@ import glob
 import csv
 import argparse
 import requests
+import ipaddress
+
 from typing import List, Dict, Tuple
 from dotenv import load_dotenv
 
@@ -74,10 +76,17 @@ def check_config():
 # Domain parsing
 # ─────────────────────────────────────────────
 
+import ipaddress
+
 def is_valid_domain(value: str) -> bool:
-    """Basic domain validation (no IPs, no wildcards, must have a dot)."""
     if not value or "." not in value or "*" in value:
         return False
+    # 過濾掉 IP address
+    try:
+        ipaddress.ip_address(value)
+        return False  # 是 IP，排除
+    except ValueError:
+        pass
     pattern = re.compile(
         r'^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?'
         r'(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$'
