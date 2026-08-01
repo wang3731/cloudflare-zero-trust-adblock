@@ -24,16 +24,16 @@ jobs:
       - name: Generate DNS lists
         run: python3 generate-lists.py
         
-      - name: Upload DNS to Cloudflare
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: python3 upload_to_cloudflare_1.py --auto-approve
+      # - name: Upload DNS to Cloudflare
+      #   env:
+      #     CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      #     CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      #   run: python3 upload_to_cloudflare_1.py --auto-approve
               
       - name: Upload No Inspect policy
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: python3 generate-noinspect-list.py --auto-approve
+        run: python3 generate-noinspect-list-2.py --auto-approve
         
 
