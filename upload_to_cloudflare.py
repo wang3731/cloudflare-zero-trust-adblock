@@ -275,7 +275,7 @@ Examples:
         return 0
 
     # Check for and optionally delete existing AdGuard lists
-    delete_existing_adguard_lists(args.auto_approve)
+    # delete_existing_adguard_lists(args.auto_approve)
 
     # Find all CSV files in the lists/ directory
     domain_files = sorted(glob.glob("lists/adguard_domains_*.csv"))
