@@ -370,7 +370,7 @@ Examples:
     print("Step 3: Creating DNS Policy")
     print("=" * 70)
 
-    policy_name = "Block AdGuard DNS Filter"
+    policy_name = "Block AdGuard DNS Filter_"
     create_dns_policy(list_ids, policy_name, len(domain_files))
 
     # Summary
