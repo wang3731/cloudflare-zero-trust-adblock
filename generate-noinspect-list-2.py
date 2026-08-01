@@ -262,7 +262,7 @@ def create_http_noinspect_policy(list_ids: List[str], policy_name: str):
     Selector: any(http.request.domains[*] in $list_id)
     Combined with OR.
     """
-    conditions = [f"any(http.request.domains[*] in ${lid})" for lid in list_ids]
+    conditions = [f"any(http.conn.domains[*] in ${lid})" for lid in list_ids]
     traffic    = " or ".join(conditions)
 
     data = {
