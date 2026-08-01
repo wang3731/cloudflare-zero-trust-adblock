@@ -313,7 +313,7 @@ Examples:
     # Process domain files
     for i, filepath in enumerate(domain_files, 1):
         filename = os.path.basename(filepath)
-        list_name = f"AdGuard Domains - Part {i}"
+        list_name = f"AdGuard Domains_http - Part {i}"
 
         print(f"\n[{i}/{len(domain_files)}] Processing {filename}...")
 
