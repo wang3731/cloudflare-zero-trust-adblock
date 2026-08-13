@@ -15,44 +15,54 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-def get_all_lists():
-    resp = requests.get(f"{BASE_URL}/gateway/lists", headers=HEADERS)
-    if resp.status_code != 200:
-        print(f"❌ 無法取得 lists: {resp.text}")
-        sys.exit(1)
-    return resp.json()["result"]
+def get_existing_lists() -> Dict[str, str]:
+    """
+    Get all existing Gateway Lists.
+    Returns a dict mapping list names to list IDs.
+    """
+    url = f"{BASE_URL}/gateway/lists"
+    response = requests.get(url, headers=HEADERS)
 
-def delete_list(list_id, name):
-    resp = requests.delete(f"{BASE_URL}/gateway/lists/{list_id}", headers=HEADERS)
-    if resp.status_code == 200:
-        print(f"  ✅ 已刪除: {name}")
+    if response.status_code == 200:
+        lists = response.json()["result"]
+        return {list_item["name"]: list_item["id"] for list_item in lists}
     else:
-        print(f"  ❌ 刪除失敗: {name}")
-        print(f"     {resp.text}")
+        return {}
 
+
+def delete_existing_adguard_lists(auto_approve=False):
+    """Delete any existing AdGuard lists to allow fresh upload."""
+    print("Checking for existing AdGuard lists...")
+
+    existing_lists = get_existing_lists()
+    adguard_lists = {name: list_id for name, list_id in existing_lists.items()
+                     if name.startswith("AdGuard")}
+
+    if adguard_lists:
+        print(f"Found {len(adguard_lists)} existing AdGuard lists")
+
+        if auto_approve:
+            response = 'yes'
+            print("Auto-approving deletion (--auto-approve enabled)")
+        else:
+            response = input("Delete these lists before uploading? (yes/no): ").strip().lower()
+
+        if response in ['yes', 'y']:
+            for name, list_id in adguard_lists.items():
+                url = f"{BASE_URL}/gateway/lists/{list_id}"
+                del_response = requests.delete(url, headers=HEADERS)
+
+                if del_response.status_code == 200:
+                    print(f"  ✅ Deleted: {name}")
+                else:
+                    print(f"  ❌ Failed to delete: {name}")
+
+            print()
+        else:
+            print("⚠️  Warning: Existing lists may cause conflicts")
+            print()
 def main():
-    all_lists = get_all_lists()
-
-    # 篩選要刪的（可改關鍵字）
-    target = [l for l in all_lists if l["name"].startswith("AdGuard")]
-
-    if not target:
-        print("找不到符合條件的 lists")
-        return
-
-    print(f"找到 {len(target)} 個 lists：")
-    for l in target:
-        print(f"  - {l['name']} ({l['id']})")
-
-    confirm = input("\n確定刪除？(yes/no): ").strip().lower()
-    if confirm not in ["yes", "y"]:
-        print("取消")
-        return
-
-    for l in target:
-        delete_list(l["id"], l["name"])
-        time.sleep(0.5)
-
+    delete_existing_adguard_lists(auto_approve=False)
     print("\n完成")
 
 if __name__ == "__main__":
