@@ -28,7 +28,6 @@ load_dotenv()
 
 # ─────────────────────────────────────────────
 # Configuration
-# ─────────────────────────────────────────────
 
 ACCOUNT_ID = os.getenv("CLOUDFLARE_ACCOUNT_ID")
 API_TOKEN  = os.getenv("CLOUDFLARE_API_TOKEN")
@@ -42,17 +41,16 @@ HEADERS  = {
 MAX_DOMAINS_PER_LIST = 1000  # Change to 5000 for Enterprise plans
 RATE_LIMIT_DELAY     = 1     # seconds between API calls
 
-POLICY_NAME      = "AdGuard DNS Filter"
-LIST_NAME_PREFIX = "AdGuard"   # used for both "AdGuard Domains" and "AdGuard IPs"
+POLICY_NAME      = "AdGuard_DNS_Filter"
+LIST_NAME_PREFIX = "AdGuard_DNS_Filter"   # used for both "AdGuard Domains" and "AdGuard IPs"
 
-DEFAULT_URL = (
+# AdGuard 官方 網域 排除清單
+FILTER_URL = (
     "https://raw.githubusercontent.com/AdguardTeam/FiltersRegistry/refs/heads/master/filters/filter_15_DnsFilter/filter.txt"
 )
 
-
 # ─────────────────────────────────────────────
 # Config check
-# ─────────────────────────────────────────────
 
 def check_config():
     if not ACCOUNT_ID or not API_TOKEN:
@@ -63,10 +61,8 @@ def check_config():
         print("❌ ERROR: Please replace placeholder values in .env")
         sys.exit(1)
 
-
 # ─────────────────────────────────────────────
 # Parsing
-# ─────────────────────────────────────────────
 
 def is_valid_ip(value: str) -> bool:
     try:
@@ -74,7 +70,6 @@ def is_valid_ip(value: str) -> bool:
         return True
     except ValueError:
         return False
-
 
 def is_valid_domain(value: str) -> bool:
     if not value or "." not in value or "*" in value:
@@ -86,7 +81,6 @@ def is_valid_domain(value: str) -> bool:
         r'(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$'
     )
     return bool(pattern.match(value))
-
 
 def parse_adguard_entry(line: str) -> Tuple[str, str]:
     """
@@ -107,7 +101,6 @@ def parse_adguard_entry(line: str) -> Tuple[str, str]:
             return "domain", value
 
     return None, None
-
 
 def fetch_filter_list(source: str) -> Tuple[List[str], List[str]]:
     """Download or read filter list; return (domains, ips)."""
@@ -136,10 +129,8 @@ def fetch_filter_list(source: str) -> Tuple[List[str], List[str]]:
     ips     = list(dict.fromkeys(ips))
     return domains, ips
 
-
 # ─────────────────────────────────────────────
 # CSV helpers
-# ─────────────────────────────────────────────
 
 def split_into_chunks(items: List[str], size: int) -> List[List[str]]:
     return [items[i:i + size] for i in range(0, len(items), size)]
@@ -163,10 +154,8 @@ def read_csv_file(filepath: str) -> List[str]:
     with open(filepath, "r", encoding="utf-8") as f:
         return [line.strip() for line in f if line.strip()]
 
-
 # ─────────────────────────────────────────────
 # Cloudflare API helpers
-# ─────────────────────────────────────────────
 
 def get_existing_lists() -> Dict[str, str]:
     """Return {name: id} for all existing Gateway Lists."""
@@ -292,17 +281,15 @@ def create_dns_block_policy(list_ids: List[str], domain_list_count: int, policy_
         print(f"   Body:   {resp.text}")
         sys.exit(1)
 
-
 # ─────────────────────────────────────────────
 # Main
-# ─────────────────────────────────────────────
 
 def main():
     parser = argparse.ArgumentParser(
         description="Upload AdGuard DNS Filter to Cloudflare Zero Trust Gateway"
     )
     parser.add_argument(
-        "source", nargs="?", default=DEFAULT_URL,
+        "source", nargs="?", default=FILTER_URL,
         help="URL or local path to AdGuard filter list (default: AdGuard DNS filter)"
     )
     parser.add_argument("-y", "--auto-approve", action="store_true",
@@ -388,13 +375,13 @@ def main():
 
     # Domain lists
     for i, filepath in enumerate(domain_files, 1):
-        list_name = f"AdGuard Domains - Part {i}"
+        list_name = f"AdGuard_DNS_Filter_domains_Part_{i}"
         print(f"\n[{i}/{len(domain_files)}] {list_name}")
         items   = read_csv_file(filepath)
         list_id = create_gateway_list(
             name=list_name,
             list_type="DOMAIN",
-            description=f"AdGuard DNS Filter domains — Part {i} of {len(domain_files)}",
+            description=f"AdGuard_DNS_Filter_domains_Part_{i}_of_{len(domain_files)}",
         )
         list_ids.append(list_id)
         upload_items_to_list(list_id, items, list_name)
@@ -404,13 +391,13 @@ def main():
     if ip_files:
         print()
         for i, filepath in enumerate(ip_files, 1):
-            list_name = f"AdGuard IPs - Part {i}"
+            list_name = f"AdGuard_DNS_Filter_IPs_Part_{i}"
             print(f"\n[{i}/{len(ip_files)}] {list_name}")
             items   = read_csv_file(filepath)
             list_id = create_gateway_list(
                 name=list_name,
                 list_type="IP",
-                description=f"AdGuard DNS Filter IPs — Part {i} of {len(ip_files)}",
+                description=f"AdGuard_DNS_Filter_IPs_Part_{i}_of_{len(ip_files)}",
             )
             list_ids.append(list_id)
             upload_items_to_list(list_id, items, list_name)
