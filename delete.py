@@ -61,9 +61,18 @@ def delete_existing_adguard_lists(auto_approve=False):
         else:
             print("⚠️  Warning: Existing lists may cause conflicts")
             print()
-def main():
-    delete_existing_adguard_lists(auto_approve=False)
-    print("\n完成")
+
 
 if __name__ == "__main__":
-    main()
+    parser.add_argument(
+        '-y', '--auto-approve',
+        action='store_true',
+        help='Auto-approve all prompts (non-interactive mode for cron jobs)'
+    )
+    parser.add_argument(
+        '--dry-run',
+        action='store_true',
+        help='Show what would be uploaded without making changes'
+    )
+    args = parser.parse_args()
+    delete_existing_adguard_lists(args.auto_approve)
