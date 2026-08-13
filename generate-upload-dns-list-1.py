@@ -45,9 +45,8 @@ POLICY_NAME      = "AdGuard_DNS_Filter"
 LIST_NAME_PREFIX = "AdGuard_DNS_Filter"   # used for both "AdGuard Domains" and "AdGuard IPs"
 
 # AdGuard 官方 網域 排除清單
-FILTER_URL = (
-    "https://raw.githubusercontent.com/AdguardTeam/FiltersRegistry/refs/heads/master/filters/filter_15_DnsFilter/filter.txt"
-)
+FILTER_URL = "https://raw.githubusercontent.com/AdguardTeam/FiltersRegistry/refs/heads/master/filters/filter_15_DnsFilter/filter.txt"
+
 
 # ─────────────────────────────────────────────
 # Config check
