@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import requests
+from typing import List, Dict
 from dotenv import load_dotenv
 
 load_dotenv()
