@@ -55,7 +55,7 @@ EXCLUSION_SOURCES = [
     "https://raw.githubusercontent.com/AdguardTeam/HttpsExclusions/master/exclusions/firefox.txt",
 ]
 
-LIST_NAME_PREFIX = "AdGuard No-Inspect"
+LIST_NAME_PREFIX = "AdGuard_No_Inspect"
 
 
 # ─────────────────────────────────────────────
